@@ -322,7 +322,7 @@ while True:
     NowPrice = float(getNowPrice()) #現在の価格情報を取得する
     bollinger=BollingerBands()
     rsi = RSI(14)
-    #SimpleAvg = SimpleMovingAverage(75)
+    SimpleAvg = SimpleMovingAverage(75)
 
     print("***************************************************")
     print()
@@ -333,17 +333,20 @@ while True:
     print("Lower Band1        : ",round(bollinger['Lower Band1'][19],3))
     print("Lower Band2        : ",round(bollinger['Lower Band2'][19],3))
     print("RSI                : ",rsi)
-    #print("SimpleMovingAverage: ",SimpleAvg)
+    print("SimpleMovingAverage: ",SimpleAvg)
     print("time               : ",NotTime())
     print("***************************************************")
 
     if (rsi <= 25) and (True == NotTime()):
       buyf["f1"] = 1
-    if (rsi >=32)and(buyf["f1"] == 1) :
+    if (rsi >=32)and(buyf["f1"] == 1)and(NowPrice >= SimpleAvg) :
       buyf["f2"] = 1
       buyf["f1"] = 0
       print("buy")
       OrderExchange("10000","USD_JPY")
+      
+    if((buyf["f1"] == 1)and(rsi >=50)):
+      buyf["f1"] = 0
         
     if ((buyf["f2"] == 1)and
         ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
@@ -354,14 +357,18 @@ while True:
       buyf["f3"] = 0
       print("clear")
 
+
     if (rsi >= 75) and (True == NotTime()):
       sellf["f1"] = 1
-    if (rsi <=68)and(sellf["f1"] == 1) :
+    if (rsi <=68)and(sellf["f1"] == 1)and(NowPrice <= SimpleAvg) :
       sellf["f2"] = 1
       sellf["f1"] = 0
       print("sell")
       OrderExchange("-10000","USD_JPY")
       
+    if((buyf["f1"] == 1)and(rsi <=50)):
+      sellf["f1"] = 0
+        
     if ((sellf["f2"] == 1)and
         ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
          (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
