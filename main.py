@@ -1,4 +1,5 @@
 
+
 from oandapyV20 import API
 from oandapyV20.exceptions import V20Error
 from oandapyV20.endpoints.pricing import PricingStream
@@ -293,12 +294,14 @@ def NotTime():
       bl = False
     elif (2 <= dt_now.hour) and (dt_now.hour <= 8):#2時から9時まで禁止
       bl = False
+    elif (12 <= dt_now.hour) and (dt_now.hour <= 12):#12時から12時まで禁止
+      bl = False
     else:
       bl = True
   except ZeroDivisionError:
     print("gettime error")
 
-  #bl = True #禁止時間でも強制的に許可する。（パフォーマンステスト用）
+  bl = True#禁止時間でも強制的に許可する。（パフォーマンステスト用）
   return bl  
 
 #*************************＃
@@ -312,8 +315,6 @@ timer = ""
 posi_flag = 0
 buyf = {"f1":0,"f2":0,"f3":0}
 sellf = {"f1":0,"f2":0,"f3":0}
-
-junnbari_f = 0
 #MACD()
 
 initsts = 0
@@ -324,7 +325,7 @@ while True:
     NowPrice = float(getNowPrice()) #現在の価格情報を取得する
     bollinger=BollingerBands()
     rsi = RSI(14)
-    SimpleAvg = SimpleMovingAverage(75)
+    SimpleAvg = SimpleMovingAverage(200)
 
     print("***************************************************")
     print()
@@ -339,57 +340,37 @@ while True:
     print("time               : ",NotTime())
     print("***************************************************")
 
-    if (rsi <= 25) and (True == NotTime()):
+    if (rsi <= 25) and (NowPrice >= SimpleAvg) and (True == NotTime()):
       buyf["f1"] = 1
     if (rsi >=32)and(buyf["f1"] == 1) :
       buyf["f2"] = 1
       buyf["f1"] = 0
       print("buy")
-      if (NowPrice > SimpleAvg):
-        OrderExchange("10000","USD_JPY")
-      else :
-        OrderExchange("20000","USD_JPY")
-        junnbari_f = 1
+      OrderExchange("10000","USD_JPY")
         
     if ((buyf["f2"] == 1)and
         ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
          (NowPrice <= bollinger['Lower Band2'][19])or((rsi <= 25)))) :#損切り
-      
-      if (junnbari_f == 0):
-        OrderExchange("-10000","USD_JPY")
-      else :
-        OrderExchange("-20000","USD_JPY")
-      
-      junnbari_f = 0
+      OrderExchange("-10000","USD_JPY")
       buyf["f1"] = 0
       buyf["f2"] = 0
       buyf["f3"] = 0
       print("clear")
 
-    if (rsi >= 75) and (True == NotTime()):
+
+    if (rsi >= 75) and (NowPrice <= SimpleAvg)  and (True == NotTime()):
       sellf["f1"] = 1
-    if (rsi <=68)and(sellf["f1"] == 1) :
+    if (rsi <=68)and(sellf["f1"] == 1):
       sellf["f2"] = 1
       sellf["f1"] = 0
       print("sell")
+      OrderExchange("-10000","USD_JPY")
       
-      if (NowPrice < SimpleAvg):
-        OrderExchange("-10000","USD_JPY")
-      else :
-        OrderExchange("-20000","USD_JPY")
-        junnbari_f = 1
-        
         
     if ((sellf["f2"] == 1)and
         ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
          (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
-      
-      if (junnbari_f == 0):
-        OrderExchange("10000","USD_JPY")
-      else :
-        OrderExchange("20000","USD_JPY")
-      
-      junnbari_f = 0
+      OrderExchange("10000","USD_JPY")
       sellf["f1"] = 0
       sellf["f2"] = 0
       sellf["f3"] = 0
