@@ -317,6 +317,16 @@ buyf = {"f1":0,"f2":0,"f3":0}
 sellf = {"f1":0,"f2":0,"f3":0}
 #MACD()
 
+Debug_sell_cnt1 = 0
+Debug_sell_cnt2 = 0
+Debug_sell_cnt3 = 0
+Debug_sell_cnt4 = 0
+
+Debug_buy_cnt1 = 0
+Debug_buy_cnt2 = 0
+Debug_buy_cnt3 = 0
+Debug_buy_cnt4 = 0
+
 initsts = 0
 while True:
   try:
@@ -340,18 +350,46 @@ while True:
     print("time               : ",NotTime())
     print("***************************************************")
 
+    print("Debug_buy_cnt1",Debug_buy_cnt1)
+    print("Debug_buy_cnt2",Debug_buy_cnt2)
+    print("Debug_buy_cnt3",Debug_buy_cnt3)
+    print("Debug_buy_cnt4",Debug_buy_cnt4)
+    print("Debug_sell_cnt1",Debug_sell_cnt1)
+    print("Debug_sell_cnt2",Debug_sell_cnt2)
+    print("Debug_sell_cnt3",Debug_sell_cnt3)
+    print("Debug_sell_cnt4",Debug_sell_cnt4)
+
+    print("buyf[f1]",buyf["f1"])
+    print("buyf[f2]",buyf["f2"])
+    print("buyf[f3]",buyf["f3"])
+    print("sellf[f1]",sellf["f1"])
+    print("sellf[f2]",sellf["f2"])
+    print("sellf[f3]",sellf["f3"])
+    
     if (rsi <= 25) and (NowPrice >= SimpleAvg) and (True == NotTime()):
       buyf["f1"] = 1
     if (rsi >=32)and(buyf["f1"] == 1) :
       buyf["f2"] = 1
       buyf["f1"] = 0
       print("buy")
-      OrderExchange("10000","USD_JPY")
+      OrderExchange("-10000","USD_JPY")
         
     if ((buyf["f2"] == 1)and
         ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
          (NowPrice <= bollinger['Lower Band2'][19])or((rsi <= 25)))) :#損切り
-      OrderExchange("-10000","USD_JPY")
+      
+      if (NowPrice >= bollinger['Upper Band2'][19]):#利確
+        Debug_buy_cnt1 += 1
+      if (rsi >= 65):
+        Debug_buy_cnt2 += 1
+        
+      if (NowPrice <= bollinger['Lower Band2'][19]):#損切り
+        Debug_buy_cnt3 += 1
+      if (rsi <= 25):
+        Debug_buy_cnt4 += 1
+        
+        
+      OrderExchange("10000","USD_JPY")
       buyf["f1"] = 0
       buyf["f2"] = 0
       buyf["f3"] = 0
@@ -364,13 +402,24 @@ while True:
       sellf["f2"] = 1
       sellf["f1"] = 0
       print("sell")
-      OrderExchange("-10000","USD_JPY")
+      OrderExchange("10000","USD_JPY")
       
         
     if ((sellf["f2"] == 1)and
         ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
          (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
-      OrderExchange("10000","USD_JPY")
+      
+      if(NowPrice <= bollinger['Lower Band2'][19]):#利確
+        Debug_sell_cnt1 += 1
+      if(rsi <= 35):
+        Debug_sell_cnt2 += 1
+        
+      if(NowPrice >= bollinger['Upper Band2'][19]):#損切り
+        Debug_sell_cnt3 += 1
+      if(rsi >= 75):
+        Debug_sell_cnt4 += 1
+        
+      OrderExchange("-10000","USD_JPY")
       sellf["f1"] = 0
       sellf["f2"] = 0
       sellf["f3"] = 0
