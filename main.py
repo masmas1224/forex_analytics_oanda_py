@@ -291,14 +291,14 @@ def NotTime():
 
     if (21 <= dt_now.hour ) and (dt_now.hour <= 23):#21時から23時まで禁止
       bl = False
-    elif (2 <= dt_now.hour) and (dt_now.hour <= 9):#2時から9時まで禁止
+    elif (2 <= dt_now.hour) and (dt_now.hour <= 8):#2時から9時まで禁止
       bl = False
     else:
       bl = True
   except ZeroDivisionError:
     print("gettime error")
 
-  bl = True#禁止時間でも強制的に許可する。（パフォーマンステスト用）
+  #bl = True #禁止時間でも強制的に許可する。（パフォーマンステスト用）
   return bl  
 
 #*************************＃
@@ -312,6 +312,8 @@ timer = ""
 posi_flag = 0
 buyf = {"f1":0,"f2":0,"f3":0}
 sellf = {"f1":0,"f2":0,"f3":0}
+
+junnbari_f = 0
 #MACD()
 
 initsts = 0
@@ -339,40 +341,55 @@ while True:
 
     if (rsi <= 25) and (True == NotTime()):
       buyf["f1"] = 1
-    if (rsi >=32)and(buyf["f1"] == 1)and(NowPrice >= SimpleAvg) :
+    if (rsi >=32)and(buyf["f1"] == 1) :
       buyf["f2"] = 1
       buyf["f1"] = 0
       print("buy")
-      OrderExchange("10000","USD_JPY")
-      
-    if((buyf["f1"] == 1)and(rsi >=50)):
-      buyf["f1"] = 0
+      if (NowPrice > SimpleAvg):
+        OrderExchange("10000","USD_JPY")
+      else :
+        OrderExchange("20000","USD_JPY")
+        junnbari_f = 1
         
     if ((buyf["f2"] == 1)and
         ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
          (NowPrice <= bollinger['Lower Band2'][19])or((rsi <= 25)))) :#損切り
-      OrderExchange("-10000","USD_JPY")
+      
+      if (junnbari_f == 0):
+        OrderExchange("-10000","USD_JPY")
+      else :
+        OrderExchange("-20000","USD_JPY")
+      
+      junnbari_f = 0
       buyf["f1"] = 0
       buyf["f2"] = 0
       buyf["f3"] = 0
       print("clear")
 
-
     if (rsi >= 75) and (True == NotTime()):
       sellf["f1"] = 1
-    if (rsi <=68)and(sellf["f1"] == 1)and(NowPrice <= SimpleAvg) :
+    if (rsi <=68)and(sellf["f1"] == 1) :
       sellf["f2"] = 1
       sellf["f1"] = 0
       print("sell")
-      OrderExchange("-10000","USD_JPY")
       
-    if((buyf["f1"] == 1)and(rsi <=50)):
-      sellf["f1"] = 0
+      if (NowPrice < SimpleAvg):
+        OrderExchange("-10000","USD_JPY")
+      else :
+        OrderExchange("-20000","USD_JPY")
+        junnbari_f = 1
+        
         
     if ((sellf["f2"] == 1)and
         ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
          (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
-      OrderExchange("10000","USD_JPY")
+      
+      if (junnbari_f == 0):
+        OrderExchange("10000","USD_JPY")
+      else :
+        OrderExchange("20000","USD_JPY")
+      
+      junnbari_f = 0
       sellf["f1"] = 0
       sellf["f2"] = 0
       sellf["f3"] = 0
