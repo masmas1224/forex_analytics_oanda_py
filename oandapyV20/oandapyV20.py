@@ -263,26 +263,17 @@ class API(object):
                             **request_args)
         except requests.RequestException as err:
             logger.error("request %s failed [%s]", url, err)
-            
-            try:
-                raise err
-            except:
-                print("Handle error responses")
-                
+            raise err
+
         # Handle error responses
-        print("response.status_code")
-        try:
-            if response.status_code >= 400:
-                logger.error("request %s failed [%d,%s]",
-                             url,
-                             response.status_code,
-                             response.content.decode('utf-8'))
-                raise V20Error(response.status_code,
-                               response.content.decode('utf-8'))
-        except:
-            print("Handle error responses")
-            
-            
+
+        if response.status_code >= 400:
+            logger.error("request %s failed [%d,%s]",
+                         url,
+                         response.status_code,
+                         response.content.decode('utf-8'))
+            raise V20Error(response.status_code,
+                           response.content.decode('utf-8'))
         return response
 
     def __stream_request(self, method, url, request_args, headers=None):
@@ -346,17 +337,13 @@ class API(object):
 
             response = self.__request(method, url,
                                       request_args, headers=headers)
-            try:
-                content = response.content.decode('utf-8')
-                content = json.loads(content)
-                # update endpoint
-                endpoint.response = content
-                endpoint.status_code = response.status_code
-            except:
-                content = 0
-                print("Handle error responses")
-                
-            
+            content = response.content.decode('utf-8')
+            content = json.loads(content)
+
+            # update endpoint
+            endpoint.response = content
+            endpoint.status_code = response.status_code
+
             return content
 
         else:

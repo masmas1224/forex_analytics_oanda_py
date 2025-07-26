@@ -1,5 +1,4 @@
 
-
 from oandapyV20 import API
 from oandapyV20.exceptions import V20Error
 from oandapyV20.endpoints.pricing import PricingStream
@@ -87,18 +86,15 @@ def getOldCandlesClole(cnt,gran):
     api = API(access_token=access_token, environment="practice")
     r = instruments.InstrumentsCandles(instrument="USD_JPY", params=params)
     PriceAction = api.request(r)['candles']
-  except :
+  except ZeroDivisionError:
     print("streaming error")
 
 #*************************＃
 #　　現在の時間を取得する。 ＃
 #*************************＃
 def getNowTime():
-  try:
-    return PriceAction[0]['time']
-  except :
-    print("streaming error")
-    
+  return PriceAction[0]['time']
+
 #*************************＃
 #　　ボリンジャーバント     ＃
 #*************************＃
@@ -320,81 +316,86 @@ sellf = {"f1":0,"f2":0,"f3":0}
 
 initsts = 0
 while True:
-  nowtime = getNowTime()#取引した時間
-  getOldCandlesClole(str(candleCnt),"M1")
-  NowPrice = float(getNowPrice()) #現在の価格情報を取得する
-  bollinger=BollingerBands()
-  rsi = RSI(14)
-  SimpleAvg = SimpleMovingAverage(75)
-  
-  print("***************************************************")
-  print()
-  print("Upper Band2        : ",bollinger['Upper Band2'][19])
-  print("Upper Band1        : ",bollinger['Upper Band1'][19])
-  print("-------------------",NowPrice,"-------------------")
-  print("Lower Band1        : ",bollinger['Lower Band1'][19])
-  print("Lower Band2        : ",bollinger['Lower Band2'][19])
-  print()
-  print("RSI                : ",rsi)
-  print("SimpleMovingAverage: ",SimpleAvg)
-  print("time               : ",NotTime())
-  print("***************************************************")
-  
-  if (rsi <= 25) and (True == NotTime()):
-    buyf["f1"] = 1
-  if (rsi >=32)and(buyf["f1"] == 1)and(NowPrice >= SimpleAvg) :
-    buyf["f2"] = 1
-    buyf["f1"] = 0
-    print("buy")
-    OrderExchange("10000","USD_JPY")
-  if ((buyf["f2"] == 1)and
-      ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
-       (NowPrice <= bollinger['Lower Band2'][19])or((rsi <= 25)))) :#損切り
-    OrderExchange("-10000","USD_JPY")
-    buyf["f1"] = 0
-    buyf["f2"] = 0
-    buyf["f3"] = 0
-    print("clear")
-  
-  
-  if (rsi >= 75) and (True == NotTime()):
-    sellf["f1"] = 1
-  if (rsi <=68)and(sellf["f1"] == 1)and(NowPrice <= SimpleAvg) :
-    sellf["f2"] = 1
-    sellf["f1"] = 0
-    print("sell")
-    OrderExchange("-10000","USD_JPY")
-  if ((sellf["f2"] == 1)and
-      ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
-       (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
-    OrderExchange("10000","USD_JPY")
-    sellf["f1"] = 0
-    sellf["f2"] = 0
-    sellf["f3"] = 0
-    print("clear")
-  
+  try:
+    nowtime = getNowTime()#取引した時間
+    getOldCandlesClole(str(candleCnt),"M1")
+    NowPrice = float(getNowPrice()) #現在の価格情報を取得する
+    bollinger=BollingerBands()
+    rsi = RSI(14)
+    #SimpleAvg = SimpleMovingAverage(75)
+
+    print("***************************************************")
+    print()
+    print("NowPrice(usd/jpy)  :",NowPrice)
+    print()
+    print("Upper Band2        : ",round(bollinger['Upper Band2'][19],3))
+    print("Upper Band1        : ",round(bollinger['Upper Band1'][19],3))
+    print("Lower Band1        : ",round(bollinger['Lower Band1'][19],3))
+    print("Lower Band2        : ",round(bollinger['Lower Band2'][19],3))
+    print("RSI                : ",rsi)
+    #print("SimpleMovingAverage: ",SimpleAvg)
+    print("time               : ",NotTime())
+    print("***************************************************")
+
+    if (rsi <= 25) and (True == NotTime()):
+      buyf["f1"] = 1
+    if (rsi >=32)and(buyf["f1"] == 1) :
+      buyf["f2"] = 1
+      buyf["f1"] = 0
+      print("buy")
+      OrderExchange("10000","USD_JPY")
+        
+    if ((buyf["f2"] == 1)and
+        ((NowPrice >= bollinger['Upper Band2'][19])or(rsi >= 65)or#利確
+         (NowPrice <= bollinger['Lower Band2'][19])or((rsi <= 25)))) :#損切り
+      OrderExchange("-10000","USD_JPY")
+      buyf["f1"] = 0
+      buyf["f2"] = 0
+      buyf["f3"] = 0
+      print("clear")
+
+    if (rsi >= 75) and (True == NotTime()):
+      sellf["f1"] = 1
+    if (rsi <=68)and(sellf["f1"] == 1) :
+      sellf["f2"] = 1
+      sellf["f1"] = 0
+      print("sell")
+      OrderExchange("-10000","USD_JPY")
+      
+    if ((sellf["f2"] == 1)and
+        ((NowPrice <= bollinger['Lower Band2'][19])or(rsi <= 35)or#利確
+         (NowPrice >= bollinger['Upper Band2'][19])or((rsi >= 75)))) :#損切り
+      OrderExchange("10000","USD_JPY")
+      sellf["f1"] = 0
+      sellf["f2"] = 0
+      sellf["f3"] = 0
+      print("clear")
 
 
-  
-  #MACD()
-  #print(round(macd[0]['macd'],4))
 
-"""
-  if timer != nowtime:
-    if True == NotTime():#取引する時間判定
-      if NowPrice <= bollinger['Lower Band2'][19]:
-        timer = getNowTime()#取引した時間
-        OrderExchange("10000","USD_JPY")
-        print("buy")
-      elif NowPrice >= bollinger['Upper Band2'][19]:
-        timer = getNowTime()#取引した時間
-        OrderExchange("-10000","USD_JPY")
-        print("sell")
-      else:
-        print("Non")
-  time.sleep(1)
-  print()
-"""
+
+    #MACD()
+    #print(round(macd[0]['macd'],4))
+  except :
+    print("error!!!!!!!!!!!!!!")
+    time.sleep(5)
+    
+  """
+    if timer != nowtime:
+      if True == NotTime():#取引する時間判定
+        if NowPrice <= bollinger['Lower Band2'][19]:
+          timer = getNowTime()#取引した時間
+          OrderExchange("10000","USD_JPY")
+          print("buy")
+        elif NowPrice >= bollinger['Upper Band2'][19]:
+          timer = getNowTime()#取引した時間
+          OrderExchange("-10000","USD_JPY")
+          print("sell")
+        else:
+          print("Non")
+    time.sleep(1)
+    print()
+  """
 
     
 
